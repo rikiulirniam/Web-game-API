@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Spatie\FlareClient\Http\Exceptions\InvalidData;
 
 class AuthController extends Controller
 {
@@ -24,48 +25,90 @@ class AuthController extends Controller
             return response()->json([
                 'status' => 'Invalid',
                 'message' => $validator->errors()
-            ]);
+            ], 422);
         }
 
-        $user = User::create($validator->validated());
 
+        $userCreated = User::create([
+            'username' => $request->username,
+            'password' => Hash::make($request->password)
+        ]);
 
-        if(Auth::guard('user')->attempt($validator->validated())){
-            $user = Auth::guard('user')->user();
-            $user->accessToken = $user->createToken(Str::random(100))->plainTextToken;
+        $user = User::where('username', $userCreated->username)->first();
+        if($user && Hash::check($request->password, $user->password)){
+            $token = $user->createToken(Str::random(100))->plainTextToken;
             return response()->json([
                 'status' => 'Success',
+                'token' => $token,
                 'user' => $user
+            ], 201);
+        }
+
+            return response()->json([
+                'status' => 'Invalid'
+            ]);
+
+            
+    }
+
+    public function signin(Request $request){
+
+        // Mencoba mengotentikasi dari tabel 'users'
+        $validator = Validator::make($request->all(), [
+            'username' => 'required|min:4|max:60',
+            'password' => 'required|min:5|max:15'
+        ]);
+
+        if($validator->fails()){
+            return response()->json([
+                'status' => 'Invalid',
+                'message' => 'Invalid fields'
             ]);
         }
 
+        $user = User::where('username', $request->username)->first();
+
+        if ($user && Hash::check($request->password, $user->password)) {
+            $token = $user->createToken(Str::random(100))->plainTextToken;
+            return response()->json([
+                'status' => 'Success',
+                'token' => $token,
+                'user' => $user,
+            ]);
+        }
         
+        $admin = Administrator::where('username' , $request->username)->first();
+            if ($admin &&  Hash::check($request->password, $admin->password)) {
+                $token = $admin->createToken(Str::random(100))->plainTextToken;
+                return response()->json([
+                    'status' => 'Success',
+                    'token' => $token,
+                    'user' => $admin,
+                ]);
+            }
 
-
-    }
-    public function signin(Request $request){
-
-    // Mencoba mengotentikasi dari tabel 'users'
-    $validator = Validator::make($request->all(), [
-        'username' => 'required|min:4|max:60',
-        'password' => 'required|min:5|max:10'
-    ]);
-
-    if($validator->fails()){
         return response()->json([
             'status' => 'Invalid',
-            'message' => $validator->errors()
-        ]);
-    }
-    if (Auth::guard('user')->attempt(['username' => $request->username, 'password' => $request->password])) {
-       return response()->json(['Login sebagai user', 'user' => Auth::guard('user')->user()]);
-    }
-    
-    if (!Auth::check()) {
-        if (Auth::guard('admin')->attempt(['username' => $request->username, 'password' => $request->password])) {
-                return response()->json(['Login sebagai admin', 'user' => Auth::guard('admin')->user()]);
-            }
-        }
+            'message' => 'Wrong Username or Password'
+        ], 401);
     }
 
+    public function signout(){
+        $user = Auth::guard('player')->check();
+        if($user){
+            Auth::guard('player')->user()->tokens()->delete();
+            return response()->json([
+                'status' => 'Success'
+            ]);
+        }
+        $admin = Auth::guard('admin')->check();
+        if($admin){
+            Auth::guard('admin')->user()->tokens()->delete();
+            return response()->json([
+                'status' => 'Success'
+            ]);
+        }
+
+        return response()->json(['status' => 'Success']);
+    }
 }

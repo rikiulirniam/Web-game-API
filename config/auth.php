@@ -14,7 +14,7 @@ return [
     */
 
     'defaults' => [
-        'guard' => env('AUTH_GUARD', 'admin'),
+        'guard' => env('AUTH_GUARD', 'web'),
         'passwords' => env('AUTH_PASSWORD_BROKER', 'users'),
     ],
 
@@ -40,12 +40,12 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
-        'user' => [
-            'driver' => 'session',
+        'player' => [
+            'driver' => 'sanctum',
             'provider' => 'users'
         ],
         'admin' => [
-            'driver' => 'session',
+            'driver' => 'sanctum',
             'provider' => 'administrators'
         ],
 

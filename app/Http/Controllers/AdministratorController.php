@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Administrator;
 use App\Http\Requests\StoreAdministratorRequest;
 use App\Http\Requests\UpdateAdministratorRequest;
+use Illuminate\Support\Facades\Auth;
 
 class AdministratorController extends Controller
 {
@@ -13,7 +14,8 @@ class AdministratorController extends Controller
      */
     public function index()
     {
-        //
+        $admin = Administrator::all();
+        return response()->json(['status' => 'Success', 'content' => $admin]);
     }
 
     /**
