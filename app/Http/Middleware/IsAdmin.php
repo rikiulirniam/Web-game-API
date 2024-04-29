@@ -16,13 +16,20 @@ class IsAdmin
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if(!Auth::guard('admin')->user()){
+        // if()
+        if(Auth::guard('admin')->check()){
+            return $next($request);
             response()->json([
                 'status' => 'Forbidden',
-                'You are not the administrator'
+                'message' => 'You are not the administrator'
             ], 403)->send();
             die;
         }
-        return $next($request);
+        if(Auth::guard('player')->check()){
+            response()->json([
+                'message' => 'Unauthenticated'
+             ], 401)->send();
+            die;
+        }
     }
 }

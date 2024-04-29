@@ -20,7 +20,7 @@ class AuthController extends Controller
             'username' => 'required|unique:users,username|min:4|max:60',
             'password' => 'required|min:5|max:10'
         ]);
-    
+
         if($validator->fails()){
             return response()->json([
                 'status' => 'Invalid',
@@ -48,7 +48,7 @@ class AuthController extends Controller
                 'status' => 'Invalid'
             ]);
 
-            
+
     }
 
     public function signin(Request $request){
@@ -76,7 +76,7 @@ class AuthController extends Controller
                 'user' => $user,
             ]);
         }
-        
+
         $admin = Administrator::where('username' , $request->username)->first();
             if ($admin &&  Hash::check($request->password, $admin->password)) {
                 $token = $admin->createToken(Str::random(100))->plainTextToken;
@@ -109,6 +109,6 @@ class AuthController extends Controller
             ]);
         }
 
-        return response()->json(['status' => 'Success']);
+        return response()->json(['status' => 'Invalid'], 401);
     }
 }

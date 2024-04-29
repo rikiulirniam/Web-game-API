@@ -11,11 +11,13 @@ use Illuminate\Support\Facades\Route;
 //     return $request->user();
 // })->middleware('auth:sanctum');
 
-Route::prefix('/v1')->group(function(){
-    Route::post('auth/signin',[AuthController::class, 'signin'] );
-    Route::post('auth/signup',[AuthController::class, 'signup'] );
-    Route::middleware('auth:player')->middleware('auth:admin')->group(function(){
+Route::prefix('/v1')->group(function () {
+    Route::post('auth/signin', [AuthController::class, 'signin']);
+    Route::post('auth/signup', [AuthController::class, 'signup']);
+    Route::middleware('auth:admin,player')->group(function () {
         Route::post('auth/signout', [AuthController::class, 'signout']);
     });
-    Route::apiResource('admins', AdministratorController::class );
+    Route::middleware('auth:admin')->group(function () {
+        Route::apiResource('admins', AdministratorController::class);
+    });
 });
